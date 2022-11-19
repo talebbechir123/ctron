@@ -13,5 +13,5 @@
 #include "common.h"
 
 
-int winner ();
-int positon();
+int winner(*display_info);
+int positon_calcul(*display_info);
