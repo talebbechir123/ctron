@@ -11,3 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "common.h"
+
+
+int winner ();
+int positon();

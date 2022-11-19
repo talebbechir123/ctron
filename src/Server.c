@@ -20,6 +20,31 @@
  // tableau de descripteur de client 
 int client[2];
 
+int server_send(int client_socket, void* data){
+    int n = 0;
+    int len  =strlen(data);
+    if((n= send(client_socket, data, len, 0)) > 0) {
+       
+  }  else {
+            perror("Error : send failed");
+            return -1;
+    }
+
+    return n;
+}
+int server_recv(int client_socket, void *data){
+ int n = 0;
+    memset(data,0,strlen(data));
+    
+    if((n = recv(client_socket, data, sizeof(data), 0)) > 0) {
+           // process_recv_data(client_socket, recv_msg);
+    }
+    else {
+            printf("ERROR: recv failed\n");
+        }
+    return 0;
+}
+
 int init(int server_socket){
     int socket_client;
     struct sockaddr_in client_addr;
@@ -29,12 +54,12 @@ int init(int server_socket){
         perror("ERROR : accept failed");
         return -1;
     }
-   
-     int n;
-    if((n = recv(socket_client, &init, sizeof(struct client_init_infos), 0)) == -1){
-        perror("ERROR : recv failed");
-        return -1;
-    }
+    int n=server_recv(socket_client, &init);
+    // int n;
+  //  if((n = recv(socket_client, &init, sizeof(struct client_init_infos), 0)) == -1){
+     //   perror("ERROR : recv failed");
+     //   return -1;
+  //  }
     
   nb_client=nb_client + init.nb_players;
    printf("client %d connected\n",nb_client);
@@ -83,6 +108,10 @@ int disc_set(int socket_serv, fd_set *readfds, fd_set *writefds, fd_set *exceptf
     return maxfd;
 }
 
+
+
+
+
 int main(int argc,char *argv[]){
 
     if(argc != 3){
@@ -96,9 +125,6 @@ int main(int argc,char *argv[]){
     
     int socket_serv = Server_setup(port);
    
-    
-   
-
     while(nb_client<2){
         
         int socket_client = init(socket_serv);
