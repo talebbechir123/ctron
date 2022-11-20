@@ -129,18 +129,42 @@ int main(int argc,char *argv[]){
         
         int socket_client = init(socket_serv);
         client[nb_terminal]=socket_client;
+       client[0]=socket_client;
         nb_terminal++;
     }
 
      printf("lets goooo : \n");
-    printf("client 1 : %d\n", client[0]);
+    printf("client %d\n", client[0]);
     printf("client 2 : %d\n", client[1]);
 
     fd_set readfds, writefds, exceptfds;
     int maxfd = disc_set(socket_serv, &readfds, &writefds, &exceptfds);
     
-
+  
+ 
    
+ while(1){
+     struct client_input input;
+     const int result = recv(client[0], &input, sizeof(struct client_input), 0);
+    if(result == -1)
+    {
+        perror("recv");
+        break;
+    }
+
+    else if(result == 0)
+    {
+       
+        printf( "Client disconnected\n");
+        break;
+    }
+
+      printf("client %d : sent charrecter %c\n",input.id ,input.input);
+ }
+        
+ 
+  
+ 
     close(socket_serv);
-    return 0;
+      return 0;
 }
