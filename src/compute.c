@@ -2,66 +2,57 @@
 #include "common.h"
 
 
-
+int TRAIL= 1;
+int posx;
+int posy;
 
 //function that deterimens the winner of the game
 int winner(display_info* data){
-    if(data->winner==-1){
-        return -1;
+   
+ return data->winner;
+}
+
+
+int collision(display_info* data,struct client_input player){
+    return 0;
+}
+
+
+void Set_trail(int trail){
+    if(trail==0){
+        TRAIL =0;
     }
-    else if(data->winner==0){
-        return 0;
-    }
-    else if(data->winner==1){
-        return 1;
-    }
- return 0;
 }
 //functions that calculate new board after each move
-int positon_calcul(display_info* data ,struct client_input player1,struct client_input player2){
+int positon_calcul(display_info* data ,struct client_input player){
+  
+    data->board[posx][posy]=  player.id + TRAIL_INDEX_SHIFT;
+  
+
+    switch(player.input){
+        case 'i':
+       
+        data->board[posx][posy-1]=player.id;
+            break;
+        case 'j':
+       
+        data->board[posx-1][posy]=player.id;
+            break;
+        case 'k':
+        
+        data->board[posx][posy+1]=player.id;
+            break;
+        case 'l':
+        
+        data->board[posx+1][posy]=player.id;
+            break;
+        
+
+    }
+
+
 return 0;
 }
 
 
-//test
-void char_board_gen(display_info* data){
-    int i,j;
-    for(i=0;i<16;i++){
-        for(j=0;j<16;j++){
-            if(i==0 || i==15){
-                data->board[i][j]='1';
-            }
-            else if(j==0 || j==15){
-                data->board[i][j]='1';
-            }
-            else{
-                data->board[i][j]=' ';
-            }
-            
 
-        }
-       
-    }
-  
-}
-//test
-void board_display(display_info* data){
-    
-    int i,j;
-    for(i=0;i<16;i++){
-        for(j=0;j<16;j++){
-    printf("%c",data->board[i][j]); 
-        }
-        printf("\n");
-    }
-}
-
-
-int main(int argc, char** argv)
-{
-    display_info data;
-    data.winner=-1;
-    char_board_gen(&data);
-    board_display(&data);
-    return 0;
-}
