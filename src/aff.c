@@ -48,11 +48,11 @@ void set_board(display_info *board)
         {
             if (i == 0 || i == 15 || j == 0 || j == 15)
             {
-                board->board[i][j] = 111;
+                board->board[i][j] = 1;
             }
             else
             {
-                board->board[i][j] = ' ';
+                board->board[i][j] = 0;
             }
         }
     }
@@ -65,11 +65,41 @@ int check_collision(display_info *board,position player ) {
     
      return 0; 
      }
-int check_winner(display_info *board, struct client_input input) { 
-    
-    return 0; 
+int check_winner(display_info *board, position player) {
+    if(board->board[player.y][player.x] != player.id) {
+        return 0;
+    } 
+     
+    return 1; 
     }
-void upadte_board(display_info *board, struct client_input input) {}
+void upadte_board(display_info *board, struct client_input input, position* player) {
+     board->board[player->x][player->y]=0;
+    switch (input.input)
+    {
+    case 'i':
+        board->board[player->x][player->y-1]=input.id;
+        player->y = player->y - 1;
+        break;
+    case 'j':
+        board->board[player->x-1][player->y]=input.id;
+        player->x = player->x - 1;
+        
+        break;
+    case 'k':
+
+        board->board[player->x][player->y+1]=input.id;
+        player->y = player->y +1;
+        // data->board[posx][posy+1]=' ' +  player.id;
+       
+        break;
+    case 'l':
+        board->board[player->x+1][player->y]=input.id;
+        player->x = player->x+1;
+        // data->board[posx+1][posy]= ' ' + player.id;
+       
+        break;
+    }
+}
 
 void positon_calcul(display_info *data, struct client_input player)
 {
@@ -112,13 +142,14 @@ void board_display(display_info *data)
 
     int i, j;
     for (i = 0; i < 16; i++)
-    {
+    {  printf("l%d---",i);
         for (j = 0; j < 16; j++)
         {
-            printf("%c", data->board[i][j]);
+            printf("%d", data->board[i][j]);
         }
         printf("\n");
     }
+    printf(" ------------board display----------- \n");
 }
 
 void tune_terminal()
@@ -172,27 +203,32 @@ int main(int argc, char **argv)
     // srand(time(NULL));
     display_info *data = malloc(sizeof(display_info));
     struct client_input player;
-    position player1;
-    position player2;
-    position player3;
+    position *player1=malloc(sizeof(position));
+    position *player2=malloc(sizeof(position));
+    position *player3=malloc(sizeof(position));
 
     posx = 2;
     posy = 2;
     data->winner = -1;
     // char_board_gen(&data);
     set_board(data);
-    player1.x = 0;
-    player1.y = 0;
-    player2.x = 15;
-    player2.y = 15;
-    player3.x=8;
-    player3.y=9;
+    player1->x = 2;
+    player1->y = 3;
+    player2->x = 7;
+    player2->y = 8;
+    player3->x=3;
+    player3->y=4;
+    player2->id=2;
+    player3->id=3;
+    data->board[player2->x][player2->y] = player2->id;
+     //data->board[player3.x][player3.y] = player3.id;
     
     board_display(data);
     //printf("%d\n", data->board[8][9]);
-    printf(" p1 collison : %d\n", check_collision(data,player1));
-     printf(" p2 collison : %d\n", check_collision(data,player2));
-       printf(" p3 collison : %d \n", check_collision(data,player3));
+   // printf(" p1 collison : %d\n", check_collision(data,player1));
+    // printf(" p2 collison : %d\n", check_collision(data,player2));
+       // printf(" p3 winner or not   : %d\n", check_winner(data,player3));
+      // printf(" p3 collison : %d \n", check_collision(data,player3));
    
 
     // convert 123 to string [buf]
@@ -200,13 +236,51 @@ int main(int argc, char **argv)
 
     // print our string
    // printf("%s\n", snum);
-    // player = (struct client_input) {50, 'l'};
+     player = (struct client_input) {1, 'l'};
 
     // positon_calcul(&data,player);
-    // board_display(&data);
-    // player = (struct client_input) {2, 'l'};
+    board_display(data);
+     player = (struct client_input) {2, 'l'};
+     upadte_board(data,player,player2);
+      player = (struct client_input) {2, 'l'};
+      upadte_board(data,player,player2);
+       player = (struct client_input) {2, 'k'};
+       upadte_board(data,player,player2);
+
+      board_display(data);
     // positon_calcul(&data,player);
-    // board_display(&data);
+      tune_terminal();
+     init_graphics();
+     srand(time(NULL));
+   
+    printf(" x : %d - y :%d \n", player2->x, player2->y);
+ for(;;){
+      clear();
+     
+    for (size_t i = 0; i < XMAX; i++)
+      {
+            for (size_t j = 0; j < YMAX; j++)
+             {
+                if (i == 0 || i == XMAX - 1 )
+                 {
+                     display_character(CYAN_ON_CYAN, i, j, ACS_VLINE);
+                }
+                else if (j == 0 || j == YMAX-1)
+                {
+                     display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
+                }
+
+                else if (data->board[i][j] == 2){
+                    display_character(RED_ON_BLACK, i, j, 'X');
+                    // display_character(RED_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
+                }
+                
+               
+         }
+   
+         }  
+          refresh();
+     }
 
     // for(;;){
     //  clear();
