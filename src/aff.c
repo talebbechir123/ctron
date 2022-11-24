@@ -73,7 +73,7 @@ int check_winner(display_info *board, position player) {
     return 1; 
     }
 void upadte_board(display_info *board, struct client_input input, position* player) {
-     board->board[player->x][player->y]=0;
+     board->board[player->x][player->y]=TRAIL_INDEX_SHIFT+input.id;
     switch (input.input)
     {
     case 'i':
@@ -273,9 +273,12 @@ int main(int argc, char **argv)
                 else if (data->board[i][j] == 2){
                     display_character(RED_ON_BLACK, i, j, 'X');
                     // display_character(RED_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
+                }else if(data->board[i][j] == 2 + TRAIL_INDEX_SHIFT){
+                   display_character(RED_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
                 }
                 
-               
+                 mvaddstr(0, XMAX / 2 - strlen("C-TRON") / 2, "C-TRON");
+               mvaddstr(YMAX / 2, XMAX / 2, "TESTING");
          }
    
          }  
