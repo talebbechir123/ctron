@@ -14,6 +14,7 @@
 #include <termios.h>
 #include <time.h>
 #include "common.h"
+
 #define XMAX 100
 #define YMAX 50
 #define NB_COLORS 5
@@ -159,11 +160,95 @@ int main(int argc, char *argv[])
 
     socket_server = client_setup(ip, port, nb_joueurs, socket_server);
     printf("Client setup done\n");
+
+    printf("max_fd = %d, socket_client = %d stdin %d  \n", max_fd, socket_server, STDIN_FILENO);
+    printf("Client build fdsets done\n");
+    display_info *data = malloc(sizeof(display_info));
+    tune_terminal();
+    init_graphics();
+    srand(time(NULL));
+    while (1)
+    {
+        max_fd = client_build_fdsets(socket_server, &readfds, &writefds, &exceptfds);
+        if (select(max_fd + 1, &readfds, &writefds, &exceptfds, NULL) < 0)
+        {
+            perror("ERROR : select failed");
+            exit(1);
+        }
+        if (FD_ISSET(socket_server, &readfds))
+        {
+            client_recv(socket_server, data);
+            printf("Received: %s\n", (void *)data);
+        }
+        if (FD_ISSET(STDIN_FILENO, &readfds))
+        {
+            struct client_input input;
+            int c = getch();
+            if (c == 'q')
+            {
+                break;
+            }
+            else if (c == KEY_UP)
+            {
+                input.input = KEY_UP;
+            }
+            else if (c == KEY_DOWN)
+            {
+                input.input = KEY_DOWN;
+            }
+            else if (c == KEY_LEFT)
+            {
+                input.input = KEY_LEFT;
+            }
+            else if (c == KEY_RIGHT)
+            {
+                input.input = KEY_RIGHT;
+            }
+            else
+            {
+                input.input = 0;
+            }
+            if (send(socket_server, &input, sizeof(struct client_input), 0) == -1)
+            {
+                perror("ERROR : send failed");
+                exit(1);
+            }
+            else
+            {
+                printf("Send input infos\n");
+            }
+        }
     
 
-    max_fd = client_build_fdsets(socket_server, &readfds, &writefds, &exceptfds);
-    printf("max_fd = %d, socket_client = %d stdin %d ", max_fd, socket_server, STDIN_FILENO);
-    printf("Client build fdsets done\n");
-    
+
+        for (;;)
+        {
+            clear();
+            for (size_t i = 0; i < YMAX; i++)
+            {
+                for (size_t j = 0; j < XMAX; j++)
+                {
+                    if (i == 0 || i == YMAX - 1)
+                    {
+                        display_character(CYAN_ON_CYAN, i, j, ACS_VLINE);
+                    }
+                    else if (j == 0 || j == XMAX - 1)
+                    {
+                        display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
+                    }
+                    display_character(BLUE_ON_BLACK, 8, 5, data->board[8][5]);
+                    display_character(BLUE_ON_BLACK + TRAIL_INDEX_SHIFT, 8, 5, data->board[8][5]);
+                }
+                mvaddstr(0, XMAX / 2 - strlen("C-TRON") / 2, "C-TRON");
+                mvaddstr(YMAX / 2, XMAX / 2, "TESTING");
+            }
+
+            sleep(2);
+            refresh();
+        }
+    }
+
+    // close(socket_server);
+
     return 0;
 }

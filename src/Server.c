@@ -227,46 +227,15 @@ int main(int argc, char *argv[])
     fd_set writefds;
     fd_set exceptfds;
 
-    int maxfd = disc_set(socket_serv, &readfds, &writefds, &exceptfds, clients_list);
-    printf("maxfd : %d\n", maxfd);
+    //int maxfd = disc_set(socket_serv, &readfds, &writefds, &exceptfds, clients_list);
+   
     position *player2 = malloc(sizeof(position));
 
     data->winner = -1;
     set_board(data);
     player2->x = 7;
     player2->y = 8;
-    
-    while (data->winner == -1)
-    {
-
-        if(select(maxfd + 1, &readfds, &writefds, &exceptfds, NULL) == -1){
-            perror("ERROR : select failed");
-            return -1;
-        }
-       
-        if(FD_ISSET(STDIN_FILENO, &readfds)){
-            printf("stdin\n");
-            char c;
-           c= getchar();
-              printf("c : %c\n", c);
-              for(int i = 0; i < clients_list->nb_clients; i++){
-                  if(clients_list->players[i].id == 0){
-                    
-                     if( send(clients_list->players[i].id, &c, sizeof(char), 0) == -1){
-                         perror("ERROR : send failed");
-                         return -1;
-                     } else {
-                         printf("send : %c\n", c);
-
-                     }
-
-                  }
-              }
-          
-        }
-      
-    }
-  
+   
         close(socket_serv);
         return 0;
     
