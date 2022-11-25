@@ -145,55 +145,66 @@ int disc_set(int socket_serv, fd_set *readfds, fd_set *writefds, fd_set *exceptf
     return maxfd;
 }
 
-void upadte_board(display_info *board, struct client_input input, position *player)
+void upadte_board(display_info* board, struct client_input* input, position* player)
 {
-    board->board[player->x][player->y] = TRAIL_INDEX_SHIFT + input.id;
-    switch (input.input)
+   
+    switch (input->input)
     {
     case 'i':
-        board->board[player->x][player->y - 1] = input.id;
-        player->y = player->y - 1;
+        
+        board->board[player->x][player->y - 1] = input->id;
+        board->board[player->x][player->y] = input->id+ TRAIL_INDEX_SHIFT;
+        player->y--;
+        
         break;
     case 'j':
-        board->board[player->x - 1][player->y] = input.id;
-        player->x = player->x - 1;
+        
+        board->board[player->x - 1][player->y] =input->id;
+        board->board[player->x][player->y] =  input->id+ TRAIL_INDEX_SHIFT;
+         player->x--;
 
         break;
     case 'k':
-
-        board->board[player->x][player->y + 1] = input.id;
-        player->y = player->y + 1;
+         
+        board->board[player->x][player->y + 1]  = input->id;
+        board->board[player->x][player->y] = input->id+TRAIL_INDEX_SHIFT;
+        player->y++;
         // data->board[posx][posy+1]=' ' +  player.id;
 
         break;
     case 'l':
-        board->board[player->x + 1][player->y] = input.id;
-        player->x = player->x + 1;
+         
+        board->board[player->x + 1][player->y] = input->id;
+        board->board[player->x][player->y] =input->id+ TRAIL_INDEX_SHIFT;
+        player->x++;
         // data->board[posx+1][posy]= ' ' + player.id;
 
         break;
     }
 }
+  
 
-void set_board(display_info *board)
+void set( display_info* board)
 {
-    int i, j;
-
-    for (i = 0; i < 16; i++)
-    {
-        for (j = 0; j < 16; j++)
-        {
-            if (i == 0 || i == 15 || j == 0 || j == 15)
-            {
-                board->board[i][j] = 1;
+    for(int j=0;j<YMAX;j++){
+        for(int i=0;i<XMAX;i++){
+            if(j==0 || j==YMAX-1){
+                board->board[i][j]=WALL;
             }
-            else
-            {
-                board->board[i][j] = 0;
+             if (i == 0 || i == XMAX-1) {
+               
+                board->board[i][j]=WALL;
+            }
+            else{
+                board->board[i][j]='\0';
             }
         }
     }
+   
 }
+    
+
+
 
 int main(int argc, char *argv[])
 {
@@ -208,7 +219,7 @@ int main(int argc, char *argv[])
 
     int port = atoi(argv[1]);
 
-   // int refresh_rate = atoi(argv[2]);
+    // int refresh_rate = atoi(argv[2]);
 
     int socket_serv = Server_setup(port);
 
@@ -222,21 +233,91 @@ int main(int argc, char *argv[])
     printf("client %d\n", clients_list->players[0].id);
     printf("client %d\n", clients_list->players[1].id);
     printf("server %d\n", socket_serv);
-    display_info *data = malloc(sizeof(display_info));
+   
     fd_set readfds;
     fd_set writefds;
     fd_set exceptfds;
 
-    //int maxfd = disc_set(socket_serv, &readfds, &writefds, &exceptfds, clients_list);
-   
-    position *player2 = malloc(sizeof(position));
+    // int maxfd = disc_set(socket_serv, &readfds, &writefds, &exceptfds, clients_list);
 
-    data->winner = -1;
-    set_board(data);
-    player2->x = 7;
-    player2->y = 8;
-   
-        close(socket_serv);
-        return 0;
+    position player2;
     
+    display_info data;
+    set(&data);
+
+   
+    data.winner = -1;
+    
+    //player2.x = 7;
+    //player2.y = 8;
+  clients_list->players[1].pos.x=17;
+  clients_list->players[1].pos.y=18;
+  clients_list->players[0].pos.x=7;
+  clients_list->players[0].pos.y=8;
+
+   
+    int maxfd = socket_serv;
+
+    while (1)
+    {
+
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+        FD_ZERO(&exceptfds);
+        FD_SET(socket_serv, &readfds);
+        for (int i = 0; i < clients_list->nb_clients; i++)
+        {
+            FD_SET(clients_list->players[i].id, &readfds);
+            if (clients_list->players[i].id > maxfd)
+            {
+                maxfd = clients_list->players[i].id;
+            }
+        }
+        
+
+        if (select(maxfd + 1, &readfds, &writefds, &exceptfds, NULL) == -1)
+        {
+            perror("ERROR : select failed");
+            return -1;
+        }
+
+        for (int i = 0; i < clients_list->nb_clients; i++)
+
+        {
+            if (FD_ISSET(clients_list->players[i].id, &readfds))
+            {
+                printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
+                   printf(" recieve from client %d\n",clients_list->players[i].id);
+                struct client_input input;
+                //int n = read(clients_list->players[i].id, &input, sizeof(struct client_input));
+                if(recv(clients_list->players[i].id, &input, sizeof(struct client_input), 0) == -1)
+                {
+                    perror("ERROR : recv failed");
+                    return -1;
+                }
+                input.id=clients_list->players[i].id;
+                upadte_board(&data, &input, &clients_list->players[i].pos);
+                
+                
+                 printf("input : %c\n", input.input);
+
+                if (send(clients_list->players[i].id, &data, sizeof(display_info), 0) == -1)
+                {
+                    perror("ERROR : send failed");
+                    return -1;
+                }
+                printf("sent board to client %d\n", clients_list->players[i].id);
+                printf(" player 2 position : %d %d\n", clients_list->players[i].pos.x, clients_list->players[i].pos.y);
+                printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
+              
+                
+            }
+
+
+           
+        }
+    }
+
+    close(socket_serv);
+    return 0;
 }

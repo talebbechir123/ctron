@@ -86,8 +86,6 @@ int client_build_fdsets(int listenfd, fd_set *readfds, fd_set *writefds, fd_set 
 }
 
 struct client_init_infos init;
-struct client_input input;
-struct display_info *display;
 
 int client_recv(int server_socket, void *data)
 {
@@ -153,80 +151,57 @@ int main(int argc, char *argv[])
 
     int socket_server = 0;
 
-    int max_fd = 0;
     fd_set readfds;
     fd_set writefds;
     fd_set exceptfds;
 
     socket_server = client_setup(ip, port, nb_joueurs, socket_server);
     printf("Client setup done\n");
-
-    printf("max_fd = %d, socket_client = %d stdin %d  \n", max_fd, socket_server, STDIN_FILENO);
-    printf("Client build fdsets done\n");
-    display_info *data = malloc(sizeof(display_info));
+    display_info display;
     tune_terminal();
     init_graphics();
     srand(time(NULL));
     while (1)
     {
-        max_fd = client_build_fdsets(socket_server, &readfds, &writefds, &exceptfds);
+
+        int max_fd = socket_server;
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+        FD_ZERO(&exceptfds);
+        FD_SET(socket_server, &readfds);
+        FD_SET(socket_server, &writefds);
+        FD_SET(STDIN_FILENO, &readfds);
+        fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+
         if (select(max_fd + 1, &readfds, &writefds, &exceptfds, NULL) < 0)
         {
             perror("ERROR : select failed");
             exit(1);
         }
-        if (FD_ISSET(socket_server, &readfds))
-        {
-            client_recv(socket_server, data);
-            printf("Received: %s\n", (void *)data);
-        }
+
         if (FD_ISSET(STDIN_FILENO, &readfds))
         {
             struct client_input input;
-            int c = getch();
-            if (c == 'q')
-            {
-                break;
-            }
-            else if (c == KEY_UP)
-            {
-                input.input = KEY_UP;
-            }
-            else if (c == KEY_DOWN)
-            {
-                input.input = KEY_DOWN;
-            }
-            else if (c == KEY_LEFT)
-            {
-                input.input = KEY_LEFT;
-            }
-            else if (c == KEY_RIGHT)
-            {
-                input.input = KEY_RIGHT;
-            }
-            else
-            {
-                input.input = 0;
-            }
+
+            char c;
+            read(STDIN_FILENO, &c, 1);
+            input.input = c;
             if (send(socket_server, &input, sizeof(struct client_input), 0) == -1)
             {
                 perror("ERROR : send failed");
                 exit(1);
             }
-            else
-            {
-                printf("Send input infos\n");
-            }
-        }
-    
-
-
-        for (;;)
-        {
             clear();
-            for (size_t i = 0; i < YMAX; i++)
+
+            if (recv(socket_server, &display, sizeof(display_info), 0) == -1)
             {
-                for (size_t j = 0; j < XMAX; j++)
+                perror("ERROR : recv failed");
+                exit(1);
+            }
+             refresh();
+            for (int i = 0; i < YMAX; i++)
+            {
+                for (int j = 0; j < XMAX; j++)
                 {
                     if (i == 0 || i == YMAX - 1)
                     {
@@ -236,19 +211,26 @@ int main(int argc, char *argv[])
                     {
                         display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
                     }
-                    display_character(BLUE_ON_BLACK, 8, 5, data->board[8][5]);
-                    display_character(BLUE_ON_BLACK + TRAIL_INDEX_SHIFT, 8, 5, data->board[8][5]);
+                    if (display.board[j][i] == 4)
+                    {
+                        display_character(RED_ON_BLACK, i, j, 'X');
+                    }
+                    if (display.board[j][i] == 5)
+                    {
+                        display_character(CYAN_ON_BLACK, i, j, 'X');
+                    }
+                    if (display.board[j][i] == 4 + TRAIL_INDEX_SHIFT)
+                    {
+                        display_character(YELLOW_ON_BLACK+TRAIL_INDEX_SHIFT, i, j, 'X');
+                    }
+                    if (display.board[j][i] == 5 + TRAIL_INDEX_SHIFT)
+                    {
+                        display_character(MAGENTA_ON_BLACK+TRAIL_INDEX_SHIFT, i, j, 'X');
+                    }
                 }
-                mvaddstr(0, XMAX / 2 - strlen("C-TRON") / 2, "C-TRON");
-                mvaddstr(YMAX / 2, XMAX / 2, "TESTING");
             }
 
-            sleep(2);
             refresh();
         }
     }
-
-    // close(socket_server);
-
-    return 0;
 }
