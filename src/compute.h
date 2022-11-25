@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include "common.h"
 
-
-int winner(*display_info);
-int positon_calcul(*display_info);
+//function that deterimens the winner of the game
+int winner(display_info* data);
+//functions that calculate new board after each move
+int positon_calcul(display_info* data ,struct client_input player);

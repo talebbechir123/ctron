@@ -57,6 +57,7 @@ typedef struct display_info
     int winner;
 } display_info;
 
+
 struct client_input {
     int id;
     char input;

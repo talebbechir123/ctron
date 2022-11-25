@@ -44,6 +44,8 @@
     "string": "c",
     "string_view": "c",
     "unordered_map": "c",
-    "vector": "c"
+    "vector": "c",
+    "sstream": "c",
+    "__node_handle": "c"
   }
 }
