@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
         }
 
         if (FD_ISSET(STDIN_FILENO, &readfds))
-        {
+        {  refresh();
             struct client_input input;
 
             char c;
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
                 perror("ERROR : recv failed");
                 exit(1);
             }
-             refresh();
+             
             for (int i = 0; i < YMAX; i++)
             {
                 for (int j = 0; j < XMAX; j++)

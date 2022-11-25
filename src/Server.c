@@ -219,7 +219,12 @@ int main(int argc, char *argv[])
 
     int port = atoi(argv[1]);
 
-    // int refresh_rate = atoi(argv[2]);
+    int refresh_rate = atoi(argv[2]);
+
+   
+   
+
+
 
     int socket_serv = Server_setup(port);
 
@@ -265,6 +270,9 @@ int main(int argc, char *argv[])
         FD_ZERO(&writefds);
         FD_ZERO(&exceptfds);
         FD_SET(socket_serv, &readfds);
+         TV interval ;
+         interval.tv_sec = 0;
+    interval.tv_usec = refresh_rate * 1000;
         for (int i = 0; i < clients_list->nb_clients; i++)
         {
             FD_SET(clients_list->players[i].id, &readfds);
@@ -273,13 +281,20 @@ int main(int argc, char *argv[])
                 maxfd = clients_list->players[i].id;
             }
         }
-        
-
-        if (select(maxfd + 1, &readfds, &writefds, &exceptfds, NULL) == -1)
+        int ret;
+         ret=select(maxfd + 1, &readfds, &writefds, &exceptfds, &interval);
+        if (ret == -1)
         {
             perror("ERROR : select failed");
             return -1;
         }
+        if (ret == 0)
+        {
+           // printf("timeout\n");
+            continue;
+        }
+        else{
+       
 
         for (int i = 0; i < clients_list->nb_clients; i++)
 
@@ -316,8 +331,11 @@ int main(int argc, char *argv[])
 
            
         }
+        }
     }
-
+     
     close(socket_serv);
+    free(clients_list);
+
     return 0;
 }
