@@ -9,7 +9,6 @@ int posy;
 //function that deterimens the winner of the game
 int winner(display_info* data){
    
- return data->winner;
 }
 
 

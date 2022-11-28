@@ -46,6 +46,8 @@
     "unordered_map": "c",
     "vector": "c",
     "sstream": "c",
-    "__node_handle": "c"
+    "__node_handle": "c",
+    "ios": "c",
+    "locale": "c"
   }
 }

@@ -161,8 +161,11 @@ int main(int argc, char *argv[])
     tune_terminal();
     init_graphics();
     srand(time(NULL));
+    clear();
     while (1)
     {
+        refresh();
+        mvaddstr(0, XMAX / 2 - strlen("C-TRON") / 2, "C-TRON");
 
         int max_fd = socket_server;
         FD_ZERO(&readfds);
@@ -180,7 +183,8 @@ int main(int argc, char *argv[])
         }
 
         if (FD_ISSET(STDIN_FILENO, &readfds))
-        {  refresh();
+        {
+            clear();
             struct client_input input;
 
             char c;
@@ -191,14 +195,25 @@ int main(int argc, char *argv[])
                 perror("ERROR : send failed");
                 exit(1);
             }
-            clear();
 
-            if (recv(socket_server, &display, sizeof(display_info), 0) == -1)
+            // if (recv(socket_server, &display, sizeof(display_info), 0) == -1)
+            // {
+            //     perror("ERROR : recv failed");
+            //     exit(1);
+            // }
+            if (read(socket_server, &display, sizeof(display_info)) == -1)
             {
-                perror("ERROR : recv failed");
+                perror("ERROR : read failed");
                 exit(1);
             }
-             
+            // refresh();
+            if (display.winner != -1)
+            {
+                char *winner = malloc(20);
+                sprintf(winner, "Le joueur %d a gagné !", display.winner);
+                mvaddstr(YMAX / 3,   50 / 2, winner);
+            }
+
             for (int i = 0; i < YMAX; i++)
             {
                 for (int j = 0; j < XMAX; j++)
@@ -211,26 +226,25 @@ int main(int argc, char *argv[])
                     {
                         display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
                     }
-                    if (display.board[j][i] == 4)
+                    if (display.board[i][j] == 0)
                     {
                         display_character(RED_ON_BLACK, i, j, 'X');
                     }
-                    if (display.board[j][i] == 5)
+                    if (display.board[i][j] == 1)
                     {
                         display_character(CYAN_ON_BLACK, i, j, 'X');
                     }
-                    if (display.board[j][i] == 4 + TRAIL_INDEX_SHIFT)
+                    if (display.board[i][j] == 50)
                     {
-                        display_character(YELLOW_ON_BLACK+TRAIL_INDEX_SHIFT, i, j, 'X');
+                        display_character(YELLOW_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
                     }
-                    if (display.board[j][i] == 5 + TRAIL_INDEX_SHIFT)
+                    if (display.board[i][j] == 51)
                     {
-                        display_character(MAGENTA_ON_BLACK+TRAIL_INDEX_SHIFT, i, j, 'X');
+                        display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
                     }
                 }
+                // refresh();
             }
-
-            refresh();
         }
     }
 }
