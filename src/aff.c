@@ -27,13 +27,25 @@
 #define CYAN_ON_CYAN 54
 int posx = 0;
 int posy = 0;
+#define MAXCLIENTS 2
 typedef struct position
 {
     int x;
     int y;
-    int id;
     int trail;
 } position;
+
+typedef struct player
+{
+    int id;
+    char Key;
+    position pos;
+} player;
+typedef struct clients
+{
+    player players[MAXCLIENTS];
+    int nb_clients;
+}
 
 
 
@@ -57,21 +69,30 @@ void set_board(display_info *board)
         }
     }
 }
-int check_collision(display_info *board,position player ) {
-    
-    if(board->board[player.y][player.x] == 111) {
-        return 1;
-    }
-    
-     return 0; 
+
+void check_winner(display_info* board, struct client_input* input, position* player){
+   int winner =-1;
+   if(board->board[player->y][player->x] == 111) {
+
+     for(int i=0; i<MAXCLIENTS; i++){
+         if(input->id != i){
+             winner = i;
+         }
+
      }
-int check_winner(display_info *board, position player) {
-    if(board->board[player.y][player.x] != player.id) {
-        return 0;
-    } 
-     
-    return 1; 
+        board->winner=input->id;
+    }else if(  board->board[player->y][player->x] !=0 && board->board[player->y][player->x] != input.id) {
+         int index =ntoi(board->board[player->y][player->x]);
+        if(index >TRAIL_INDEX_SHIFT) {
+            board->winner= index - TRAIL_INDEX_SHIFT;
+         }else{
+            board->winner=input->id;
+         }
+        
+      
     }
+     
+} 
 void upadte_board(display_info *board, struct client_input input, position* player) {
      board->board[player->x][player->y]=TRAIL_INDEX_SHIFT+input.id;
     switch (input.input)
