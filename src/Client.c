@@ -138,6 +138,80 @@ int client_setup(char *ip, int port, int nb_joueurs, int socket_client)
     exit(0);
 }
 
+void handle_input(char c , struct client_input *input, int nbr_joueur ){
+ if(nbr_joueur == 1){
+     switch (c)
+    {
+    
+    case 'i':
+        input->input = UP;
+        
+        break;
+    case 'k':
+        input->input = DOWN;
+        break;
+    case 'j':
+        input->input = LEFT;
+        break;
+    case 'l':
+        input->input = RIGHT;
+        break;
+    case'm' :
+        input->input = TRAIL_UP;
+        break;
+    
+    }
+
+
+ }else if(nbr_joueur == 2){
+     switch (c)
+    {
+    
+    case 'i':
+        input->input = UP;
+        input->id = 0;
+        break;
+    case 'k':
+        input->input = DOWN;
+        input->id = 0;
+        break;
+    case 'j':
+        input->input = LEFT;
+        input->id = 0;
+        break;
+    case 'l':
+        input->input = RIGHT;
+        input->id = 0;
+        break;
+    case 'm':
+        input->input = TRAIL_UP;
+        input->id = 0;
+        break;
+    case 'z':
+        input->input = UP;
+        input->id = 1;
+        break;
+    case 'q':
+        input->input = DOWN;
+        input->id = 1;
+        break;
+    case 's':
+        input->input = LEFT;
+        input->id = 1;
+        break;
+    case 'd':
+        input->input = RIGHT;
+        input->id = 1;
+        break;
+    case ' ':
+        input->input = TRAIL_UP;
+        input->id = 1;
+        break;
+    }
+ }
+   
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -184,12 +258,17 @@ int main(int argc, char *argv[])
 
         if (FD_ISSET(STDIN_FILENO, &readfds))
         {
-            clear();
-            struct client_input input;
+            
+           refresh();
 
             char c;
+           
             read(STDIN_FILENO, &c, 1);
-            input.input = c;
+              struct client_input input;
+            handle_input(c, &input, nb_joueurs);
+            
+            
+
             if (send(socket_server, &input, sizeof(struct client_input), 0) == -1)
             {
                 perror("ERROR : send failed");
@@ -227,7 +306,7 @@ int main(int argc, char *argv[])
                         display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
                     }
                     if (display.board[i][j] == 0)
-                    {
+                    { 
                         display_character(RED_ON_BLACK, i, j, 'X');
                     }
                     if (display.board[i][j] == 1)
@@ -243,8 +322,56 @@ int main(int argc, char *argv[])
                         display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
                     }
                 }
-                // refresh();
+                 //refresh();
             }
         }
+        if(FD_ISSET(socket_server, &readfds)){
+            if (read(socket_server, &display, sizeof(display_info)) == -1)
+            {
+                perror("ERROR : read failed");
+                exit(1);
+            }
+            // refresh();
+            if (display.winner != -1)
+            {
+                char *winner = malloc(20);
+                sprintf(winner, "Le joueur %d a gagné !", display.winner);
+                mvaddstr(YMAX / 3,   50 / 2, winner);
+            }
+
+            for (int i = 0; i < YMAX; i++)
+            {
+                for (int j = 0; j < XMAX; j++)
+                {
+                    if (i == 0 || i == YMAX - 1)
+                    {
+                        display_character(CYAN_ON_CYAN, i, j, ACS_VLINE);
+                    }
+                    else if (j == 0 || j == XMAX - 1)
+                    {
+                        display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
+                    }
+                    if (display.board[i][j] == 0)
+                    { 
+                        display_character(RED_ON_BLACK, i, j, 'X');
+                    }
+                    if (display.board[i][j] == 1)
+                    {
+                        display_character(CYAN_ON_BLACK, i, j, 'X');
+                    }
+                    if (display.board[i][j] == 50)
+                    {
+                        display_character(YELLOW_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
+                    }
+                    if (display.board[i][j] == 51)
+                    {
+                        display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
+                    }
+                }
+                 //refresh();
+            }
+        }
+
+        }
     }
-}
+

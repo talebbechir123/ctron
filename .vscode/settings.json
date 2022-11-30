@@ -48,6 +48,7 @@
     "sstream": "c",
     "__node_handle": "c",
     "ios": "c",
-    "locale": "c"
+    "locale": "c",
+    "__locale": "c"
   }
 }
