@@ -42,8 +42,7 @@ typedef struct clients
 
 // nombre de joueurs
 int nb_client = 0;
-int nb_terminal=0;
-
+int nb_terminal = 0;
 
 int server_send(int client_socket, void *data)
 {
@@ -57,7 +56,7 @@ int server_send(int client_socket, void *data)
         perror("Error : send failed");
         return -1;
     }
-//
+    //
     return n;
 }
 int server_recv(int client_socket, void *data)
@@ -77,7 +76,7 @@ int server_recv(int client_socket, void *data)
 }
 
 void init(int server_socket, clients *list)
-{ 
+{
 
     struct sockaddr_in client_addr;
     struct client_init_infos init;
@@ -98,7 +97,7 @@ void init(int server_socket, clients *list)
     nb_terminal = nb_terminal + 1;
 
     printf("nb_client : %d\n", list->nb_clients);
-     printf("nb_client extern : %d\n", nb_client);
+    printf("nb_client extern : %d\n", nb_client);
     printf("nb_terminal : %d\n", nb_terminal);
 }
 
@@ -151,30 +150,57 @@ void check_winner(display_info *board, struct client_input *input, position *pla
 
     if (board->board[player->x][player->y] == 111)
     {
-
-        for (int i = 0; i < 2; i++)
+        if (input->id == 0)
         {
-            if (input->id != list->players[i].id)
-            {
-                board->winner = list->players[i].id;
-                exit(0);
-            }
+            board->winner = 1;
+           
+        }
+        else if (input->id == 1)
+        {
+            board->winner = 0;
+            
         }
     }
-    else if ((board->board[player->x][player->y] != 0) && (board->board[player->x][player->y] != input->id)&&( board->board[player->x][player->y] !=input->id+TRAIL_INDEX_SHIFT)&&board->board[player->x][player->y] != 32)
+    else if ((board->board[player->x][player->y] != 0 && board->board[player->x][player->y] != 32))
     {
-        for (int i = 0; i < 2; i++)
+        if (board->board[player->x][player->y] != list->players[input->id].id)
         {
-            if (input->id != list->players[i].id)
+             if (board->board[player->x][player->y] != list->players[input->id].id + TRAIL_INDEX_SHIFT)
             {
-                board->winner = list->players[i].id;
-                exit(0);
+                 if (input->id == 0)
+                    {
+                        board->winner = 1;
+                        
+                    }   
+                else if(input->id == 1)
+                    {
+                        board->winner = 0;
+                        
+                    }
+          
+          
+            }
+             if(board->board[player->x][player->y] != list->players[input->id].id+ TRAIL_INDEX_SHIFT + 30)
+         {
+            if (input->id == 0)
+            {
+                 board->winner = 1;
+                 
+            }
+            else if(input->id == 1)
+            {
+                 board->winner = 0;
+                
             }
         }
+        }
+       
+       
     }
-   
-
 }
+   
+    
+
 
 void lightcycles(display_info *board, struct client_input *input, int index_old, int index_new)
 {
@@ -183,9 +209,9 @@ void lightcycles(display_info *board, struct client_input *input, int index_old,
     {
         for (int j = 0; j < XMAX; j++)
         {
-            if (board->board[i][j] == index_old)
+            if (board->board[j][i] == index_old)
             {
-                board->board[i][j] = index_new;
+                board->board[j][i] = index_new;
             }
         }
     }
@@ -195,77 +221,79 @@ void upadte_board(display_info *board, struct client_input *input, position *pla
 {
 
    
-        check_winner(board, input, player, list);
-    
+
     // int lock =30;
     int lock = 0;
     int index = input->id + TRAIL_INDEX_SHIFT + lock;
     if (list->players[input->id].pos.trail == 0)
-    {  lock=30;
+    {
+        lock = 30;
         index = index + lock;
     }
     else if (list->players[input->id].pos.trail == 1)
     {
         index = index - lock;
     }
-   
 
     switch (input->input)
     {
     case UP:
-         check_winner(board, input, player, list);
-        board->board[player->x-1][player->y ] = input->id;
+       
+        board->board[player->x - 1][player->y] = input->id;
         board->board[player->x][player->y] = index;
         lightcycles(board, input, index, index);
         player->x--;
+         check_winner(board, input, player, list);
 
         break;
     case LEFT:
-       check_winner(board, input, player, list);
-        board->board[player->x][player->y-1] = input->id;
+       
+        board->board[player->x][player->y - 1] = input->id;
         board->board[player->x][player->y] = index;
         lightcycles(board, input, index, index);
         player->y--;
+         check_winner(board, input, player, list);
 
         break;
     case DOWN:
-          check_winner(board, input, player, list);
-        board->board[player->x+1][player->y] = input->id;
+        
+        board->board[player->x + 1][player->y] = input->id;
         board->board[player->x][player->y] = index;
         lightcycles(board, input, index, index);
         player->x++;
         // data->board[posx][posy+1]=' ' +  player.id;
+        check_winner(board, input, player, list);
 
         break;
     case RIGHT:
-          check_winner(board, input, player, list);
-        board->board[player->x][player->y+1] = input->id;
+       
+        board->board[player->x][player->y + 1] = input->id;
         board->board[player->x][player->y] = index;
         lightcycles(board, input, index, index);
         player->y++;
         // data->board[posx+1][posy]= ' ' + player.id;
+         check_winner(board, input, player, list);
 
         break;
     case TRAIL_UP:
         if (list->players[input->id].pos.trail == 0)
         {
-
-            lightcycles(board, input, index, index + lock);
             list->players[input->id].pos.trail = 1;
+            lightcycles(board, input, index, index + lock);
 
             index = index + lock;
         }
         else if (list->players[input->id].pos.trail == 1)
         {
-            lightcycles(board, input, index + lock, index);
             list->players[input->id].pos.trail = 0;
+            lightcycles(board, input, index + lock, index);
+
             index = index - lock;
         }
 
         break;
-     char new_direction=input->input;
-     input->input=new_direction;
-   
+        char new_direction = input->input;
+        input->input = new_direction;
     }
 }
 
@@ -275,18 +303,18 @@ void set(display_info *board)
     {
         for (int j = 0; j < XMAX; j++)
         {
-            if (j == 0 || j == YMAX - 1)
+            if (j == 0 || j == XMAX - 1)
             {
-                board->board[i][j] =  WALL;
+                board->board[j][i] =111;
             }
-            if (i == 0 || i == XMAX - 1)
+            if (i == 0 || i == YMAX - 1)
             {
 
-                board->board[i][j] = WALL;
+                board->board[j][i] =111;
             }
             else
             {
-                board->board[i][j] = ' ';
+                board->board[j][i] = '/0';
             }
         }
     }
@@ -294,18 +322,14 @@ void set(display_info *board)
 
 void set_pos(clients *clients_list)
 {
-    
+
     for (int i = 0; i < clients_list->nb_clients; i++)
     {
-        clients_list->players[i].pos.x = rand() % (YMAX-3 )+3;
-        clients_list->players[i].pos.y = rand() % (XMAX-3)+3;
+        clients_list->players[i].pos.x = rand() % (YMAX - 3) + 3;
+        clients_list->players[i].pos.y = rand() % (XMAX - 3) + 3;
         clients_list->players[i].pos.trail = 1;
-       
-       
     }
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -317,8 +341,6 @@ int main(int argc, char *argv[])
     }
 
     clients *clients_list = malloc(sizeof(clients));
-   
-
 
     int port = atoi(argv[1]);
 
@@ -330,27 +352,32 @@ int main(int argc, char *argv[])
     {
         init(socket_serv, clients_list);
     }
-  int single_terminal =  clients_list->players[0].fd ;
-    if(nb_terminal==1){
-        for(int i=0;i<clients_list->nb_clients;i++){
-             clients_list->players[i].id = i;
+    int single_terminal = clients_list->players[0].fd;
+    if (nb_terminal == 1)
+    {
+        for (int i = 0; i < clients_list->nb_clients; i++)
+        {
+            clients_list->players[i].id = i;
             clients_list->players[i].fd = single_terminal;
-            
         }
     }
-    //struct client_input *input = malloc(sizeof(struct client_input));
-    struct client_input* input_tab[clients_list->nb_clients];
-    for (int i = 0; i < clients_list->nb_clients; i++)
-    {
-        input_tab[i] = malloc(sizeof(struct client_input*));
-        input_tab[i]->id = i;
-        input_tab[i]->input =UP;
-    }
+
+
+    
+
+    struct client_input *player1_input = malloc(sizeof(struct client_input));
+    struct client_input *player2_input = malloc(sizeof(struct client_input));
+    player1_input->id = 0;
+    player2_input->id = 1;
+    player1_input->input = LEFT;
+    player2_input->input = RIGHT;
+     clients_list->players[player1_input->id ].pos.trail = 1;
+      clients_list->players[player2_input->id].pos.trail = 1;
 
 
     printf("lets goooo : \n");
-    printf("client %d and socket fd %d\n",clients_list->players[0].id ,clients_list->players[0].fd);
-    printf("client %d and socket fd %d \n",clients_list->players[1].id ,clients_list->players[1].fd);
+    printf("client %d and socket fd %d\n", clients_list->players[0].id, clients_list->players[0].fd);
+    printf("client %d and socket fd %d \n", clients_list->players[1].id, clients_list->players[1].fd);
     printf("server %d\n", socket_serv);
 
     fd_set readfds;
@@ -358,16 +385,20 @@ int main(int argc, char *argv[])
     fd_set exceptfds;
 
     display_info data;
-   
 
     set(&data);
+    
 
     data.winner = -1;
 
-    set_pos(clients_list);
-  // input->input=UP;
+    //set_pos(clients_list);
+     clients_list->players[0].pos.x = 15;
+        clients_list->players[0].pos.y = 15;
+         clients_list->players[1].pos.x =  10;
+        clients_list->players[1].pos.y = 10;
+
     while (1)
-    {  
+    {
         int maxfd = socket_serv;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
@@ -393,74 +424,100 @@ int main(int argc, char *argv[])
         }
         else
         {
-        if(ret==0){
-            
-             
-              for(int i=0;i<clients_list->nb_clients;i++){
-                // printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
-                   // printf(" recieve from client %d\n", clients_list->players[i].id);
-                 upadte_board(&data, input_tab[i], &clients_list->players[i].pos, clients_list);
-                 if (send(clients_list->players[i].fd, &data, sizeof(display_info), 0) == -1)
+            if (ret == 0)
+            {
+
+                upadte_board(&data, player1_input, &clients_list->players[player1_input->id].pos, clients_list);
+                upadte_board(&data, player2_input, &clients_list->players[player2_input->id].pos, clients_list);
+
+                for (int i = 0; i < clients_list->nb_clients; i++)
+                {
+                    
+
+                    if (send(clients_list->players[i].fd, &data, sizeof(display_info), 0) == -1)
                     {
                         perror("ERROR : send failed");
                         return -1;
                     }
-                   //  printf("sent board to client %d\n", clients_list->players[i].id);
-                   // printf(" player  position : %d %d %d\n", clients_list->players[i].id ,clients_list->players[i].pos.x, clients_list->players[i].pos.y);
-                  //  printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
-              }
-              printf("refresh\n");
-             
-        }
-        // interval.tv_sec = 0;
-       // interval.tv_usec = refresh_rate * 1000;
-       if (ret > 0){
-            for (int i = 0; i < clients_list->nb_clients; i++)
-
-            {
-                if (FD_ISSET(clients_list->players[i].fd, &readfds))
-                {
-                    printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
-                    printf(" recieve from client %d\n", clients_list->players[i].id);
-                   // struct client_input input;
-                   // printf(" num 1");
-                    // int n = read(clients_list->players[i].id, &input, sizeof(struct client_input));
-                    if (recv(clients_list->players[i].fd, input_tab[i], sizeof(struct client_input*), 0) == -1)
-                    {
-                        perror("ERROR : recv failed");
-                        return -1;
-                    }
-                   // 
-                   printf(" reading and calculating .......");
-
-                   // printf(" num 1");
-                    //input->id = clients_list->players[i].id;
-                      input_tab[i]->id = clients_list->players[i].id;
-
-                    upadte_board(&data, input_tab[i], &clients_list->players[input_tab[i]->id].pos, clients_list);
-                    printf(" winner is : %d\n", data.winner);
-
-                    printf("input : %c\n", input_tab[i]->input);
-             
-                    
-                  
-                
-                    printf("sent board to client %d\n", clients_list->players[i].id);
-                    printf(" player  position : %d %d %d\n", clients_list->players[i].id ,clients_list->players[i].pos.x, clients_list->players[i].pos.y);
-                    printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
-                }
-                    
-
-                
-                
+                   
+                printf("refresh\n");
             }
-       }   
-     
-        
-        
-                    
-    }
+            }
+            // interval.tv_sec = 0;
+            // interval.tv_usec = refresh_rate * 1000;
+            if (ret > 0)
+            {
+                for (int i = 0; i < clients_list->nb_clients; i++)
 
+                {
+                    if (FD_ISSET(clients_list->players[i].fd, &readfds))
+                    {
+                        printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
+                        printf(" recieve from client %d\n", clients_list->players[i].id);
+                        struct client_input input;
+                       
+
+                        if (recv(clients_list->players[i].fd, &input, sizeof(struct client_input *), 0) == -1)
+                        {
+                            perror("ERROR : recv failed");
+                            return -1;
+                        }
+                       
+                        if (nb_terminal == 1)
+                        {
+                            if (input.id == player1_input->id)
+                            {
+                                upadte_board(&data, &input, &clients_list->players[player1_input->id].pos, clients_list);
+                               
+                                player1_input->input = input.input;
+                                 clients_list->players[player1_input->id].id = player1_input->id;
+                                   check_winner( &data, &input , &clients_list->players[player1_input->id].pos, clients_list);
+                            }
+                            else if (input.id == player2_input->id)
+                            {
+                                upadte_board(&data, &input, &clients_list->players[player2_input->id].pos, clients_list);
+                                player2_input->input = input.input;
+                                 clients_list->players[player2_input->id].id = player2_input->id;
+                                 check_winner( &data, &input , &clients_list->players[player2_input->id].pos, clients_list);
+                            }
+                        }
+                        else if (nb_terminal == 2)
+                        {
+                            input.id = i;
+                            if (input.id == player1_input->id)
+                            {
+                                upadte_board(&data, &input, &clients_list->players[player1_input->id].pos, clients_list);
+                                player1_input->input = input.input;
+                                clients_list->players[player1_input->id].id = player1_input->id;
+                                 check_winner( &data, &input , &clients_list->players[player1_input->id].pos, clients_list);
+                            }
+                            else if (input.id == player2_input->id)
+                            {
+                                upadte_board(&data, &input, &clients_list->players[player2_input->id].pos, clients_list);
+                                player2_input->input = input.input;
+                                 clients_list->players[player2_input->id].id = player2_input->id;
+                                  check_winner( &data, &input , &clients_list->players[player2_input->id].pos, clients_list);
+                            }
+                        }
+
+                        printf(" reading and calculating .......");
+
+                        printf(" winner is : %d\n", data.winner);
+                        printf("input : %d\n", input.input);
+                        printf("input id : %d\n", input.id);
+                        printf("sent board to client %d\n", clients_list->players[i].id);
+                        printf(" player  position : %d %d %d\n", clients_list->players[i].id, clients_list->players[i].pos.x, clients_list->players[i].pos.y);
+                        printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
+                    }
+
+                    // if (send(clients_list->players[i].fd, &data, sizeof(display_info), 0) == -1)
+                    // {
+                    //     perror("ERROR : send failed");
+                    //     return -1;
+                    // }
+                }
+            }
+        }
     }
     free(clients_list);
     close(socket_serv);
