@@ -48,6 +48,8 @@ The things you need before installing the software.
 $ clone the repo 
 $ cd to the project root 
 $ run make and let the magic happen 
+$ make clean to clean the src dir 
+* make clean_all to celan bin and src dir
 ```
 
 ## Usage
@@ -61,6 +63,8 @@ $ K or S to move DOWN
 $ J or Q to move LEFT
 $ L or D to move RIGHT
 $ M or SPACE to hide Light Trail
+$ when playing in a single terminal for two players press twice on the key to change 
+direction 
 ```
 
 
