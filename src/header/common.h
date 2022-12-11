@@ -67,4 +67,43 @@ struct client_init_infos {
     int nb_players;
 };
 
+
+
+
+/*
+*  strutcture  position d'un joueur
+* */
+typedef struct position
+{
+    int x; // position x du joueur
+    int y; // position y du joueur
+    int trail; // 1 si le joueur est en train de tracer un trait, 0 sinon
+} position;
+
+/*
+*  structure joueur
+* */
+typedef struct player
+{
+    int id; // id du joueur
+    int fd; // fd du joueur
+    position pos; // position du joueur
+} player;
+#define MAXCLIENTS 2
+
+/*
+*  structure liste des joueurs
+* */
+typedef struct clients
+{
+    player players[MAXCLIENTS]; // liste des joueurs
+    int nb_clients;            // nombre de joueurs connectés
+} clients;
+
+// nombre de joueurs connectés
+int nb_client = 0;
+// nombre de terminaux connectés
+int nb_terminal = 0;
+
+
 #endif
