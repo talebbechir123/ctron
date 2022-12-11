@@ -184,6 +184,22 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        char c;
+         while(1){
+           
+           
+         read(STDIN_FILENO, &c, 1); 
+            if(c == 'q'){
+                printf("game over\n");
+                return 0;
+            }
+            else{
+                printf("press q to quit\n");
+         
+         }}
+
+
+        
         free(clients_list);
         close(socket_serv);
 

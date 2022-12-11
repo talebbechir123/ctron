@@ -129,6 +129,12 @@ int main(int argc, char *argv[])
        
 
         }
+        while(1){
+           if(read(socket_server, &display, sizeof(display_info)) == -1){
+               break;
+           }
+              
+        }
         
         close(socket_server);
     }
