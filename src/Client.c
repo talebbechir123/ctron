@@ -73,36 +73,9 @@ void display_character(int color, int y, int x, char character)
     mvaddch(y, x, character);
     attroff(COLOR_PAIR(color));
 }
-int client_build_fdsets(int listenfd, fd_set *readfds, fd_set *writefds, fd_set *exceptfds)
-{
-    int max_fd = listenfd;
-    FD_ZERO(readfds);
-    FD_SET(listenfd, readfds);
-    FD_SET(listenfd, writefds);
-    FD_SET(STDIN_FILENO, readfds);
-    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
-    return max_fd;
-}
 
 struct client_init_infos init;
-
-int client_recv(int server_socket, void *data)
-{
-    int n = 0;
-    memset(data, 0, strlen(data));
-
-    if ((n = recv(server_socket, data, sizeof(data), 0)) > 0)
-    {
-        // process_recv_data(client_socket, recv_msg);
-        // printf("Received: %s\n", (void *)data);
-    }
-    else
-    {
-        printf("ERROR: recv failed\n");
-    }
-    return 0;
-}
 
 int client_setup(char *ip, int port, int nb_joueurs, int socket_client)
 {
@@ -191,11 +164,11 @@ void handle_input(char c , struct client_input *input, int nbr_joueur ){
         input->input = UP;
         input->id = 1;
         break;
-    case 'q':
+    case 's':
         input->input = DOWN;
         input->id = 1;
         break;
-    case 's':
+    case 'q':
         input->input = LEFT;
         input->id = 1;
         break;
@@ -210,6 +183,39 @@ void handle_input(char c , struct client_input *input, int nbr_joueur ){
     }
  }
    
+}
+
+
+
+void display_game(display_info display){
+     for (int i = 0; i < XMAX; i++)
+            {
+                for (int j = 0; j < YMAX; j++)
+                {
+                    if(display.board[i][j] == WALL){
+                        display_character(CYAN_ON_CYAN, j, i, 'Q');
+                    }
+                    
+                    if (display.board[i][j] == 0)
+                    {   
+                        display_character(RED_ON_BLACK, j, i, 'X');
+                    }
+                    if (display.board[i][j] == 1)
+                    {   
+                        display_character(CYAN_ON_BLACK, j, i, 'X');
+                    }
+                    if (display.board[i][j] == 50)
+                    {   
+                        display_character(YELLOW_ON_BLACK + TRAIL_INDEX_SHIFT, j, i, 'X');
+                    }
+                    if (display.board[i][j] == 51)
+                    {    
+                        display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, j, i, 'X');
+                    }
+                }
+                 refresh();
+            }
+
 }
 
 int main(int argc, char *argv[])
@@ -258,13 +264,10 @@ int main(int argc, char *argv[])
 
         if (FD_ISSET(STDIN_FILENO, &readfds))
         {
-            
-           refresh();
-
             char c;
            
             read(STDIN_FILENO, &c, 1);
-              struct client_input input;
+            struct client_input input;
             handle_input(c, &input, nb_joueurs);
             
             
@@ -275,103 +278,53 @@ int main(int argc, char *argv[])
                 exit(1);
             }
 
-            // if (recv(socket_server, &display, sizeof(display_info), 0) == -1)
-            // {
-            //     perror("ERROR : recv failed");
-            //     exit(1);
-            // }
+            
             if (read(socket_server, &display, sizeof(display_info)) == -1)
             {
                 perror("ERROR : read failed");
                 exit(1);
             }
-            // refresh();
+             
+            
+            clear();
+            display_game(display);
+            refresh();
             if (display.winner != -1)
-            {
+            {   clear();
                 char *winner = malloc(20);
                 sprintf(winner, "Le joueur %d a gagné !", display.winner);
                 mvaddstr(YMAX / 3,   50 / 2, winner);
+                refresh();
+                break;
             }
-
-            for (int i = 0; i < YMAX; i++)
-            {
-                for (int j = 0; j < XMAX; j++)
-                {
-                    if (i == 0 || i == YMAX - 1)
-                    {
-                        display_character(CYAN_ON_CYAN, i, j, ACS_VLINE);
-                    }
-                    else if (j == 0 || j == XMAX - 1)
-                    {
-                        display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
-                    }
-                    if (display.board[i][j] == 0)
-                    { 
-                        display_character(RED_ON_BLACK, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 1)
-                    {
-                        display_character(CYAN_ON_BLACK, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 50)
-                    {
-                        display_character(YELLOW_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 51)
-                    {
-                        display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
-                    }
-                }
-                 //refresh();
-            }
+             
+           
         }
         if(FD_ISSET(socket_server, &readfds)){
+          
             if (read(socket_server, &display, sizeof(display_info)) == -1)
             {
                 perror("ERROR : read failed");
-                exit(1);
+                
             }
-            // refresh();
-            if (display.winner != -1)
-            {
+
+            
+            clear();
+            display_game(display);
+            refresh();
+             if (display.winner != -1)
+            {   clear();
                 char *winner = malloc(20);
                 sprintf(winner, "Le joueur %d a gagné !", display.winner);
                 mvaddstr(YMAX / 3,   50 / 2, winner);
-            }
-
-            for (int i = 0; i < YMAX; i++)
-            {
-                for (int j = 0; j < XMAX; j++)
-                {
-                    if (i == 0 || i == YMAX - 1)
-                    {
-                        display_character(CYAN_ON_CYAN, i, j, ACS_VLINE);
-                    }
-                    else if (j == 0 || j == XMAX - 1)
-                    {
-                        display_character(CYAN_ON_CYAN, i, j, ACS_HLINE);
-                    }
-                    if (display.board[i][j] == 0)
-                    { 
-                        display_character(RED_ON_BLACK, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 1)
-                    {
-                        display_character(CYAN_ON_BLACK, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 50)
-                    {
-                        display_character(YELLOW_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
-                    }
-                    if (display.board[i][j] == 51)
-                    {
-                        display_character(MAGENTA_ON_BLACK + TRAIL_INDEX_SHIFT, i, j, 'X');
-                    }
-                }
-                 //refresh();
+                refresh();
+                break;
             }
         }
+       
 
         }
+        sleep(10);
+        close(socket_server);
     }
 
