@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
                     return -1;
                 }
 
-                printf("refresh\n");
+                
             }
         }
        
@@ -131,8 +131,6 @@ int main(int argc, char *argv[])
             {
                 if (FD_ISSET(clients_list->players[i].fd, &readfds))
                 {
-                    printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
-                    printf(" recieve from client %d\n", clients_list->players[i].id);
                     struct client_input input;
 
                     if (recv(clients_list->players[i].fd, &input, sizeof(struct client_input *), 0) == -1)
@@ -176,13 +174,6 @@ int main(int argc, char *argv[])
                             }
                         }
 
-                        printf(" reading and calculating .......");
-                        printf(" winner is : %d\n", data.winner);
-                        printf("input : %d\n", input.input);
-                        printf("input id : %d\n", input.id);
-                        printf("sent board to client %d\n", clients_list->players[i].id);
-                        printf(" player  position : %d %d %d\n", clients_list->players[i].id, clients_list->players[i].pos.x, clients_list->players[i].pos.y);
-                        printf(" data at position : %d\n", data.board[clients_list->players[i].pos.x][clients_list->players[i].pos.y]);
                     }
 
                     if (send(clients_list->players[i].fd, &data, sizeof(display_info), 0) == -1)
