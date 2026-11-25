@@ -1,79 +1,64 @@
-# C-TRON
+# C-Tron — Networked Light-Cycle Game in C
 
-the Light cycles game from tron implemented in c as a network game where two players get to face off 
+A two-player, terminal-based clone of the *Tron* light-cycle game, written in C with a client/server architecture over **TCP sockets**. The server runs the game simulation and is the single source of truth; clients only send inputs and render the board with **ncurses**.
 
-# Algo_projet
+Network Algorithms course project (*Algorithmes des Réseaux*), Licence Math-Info, Université de Strasbourg, 2022–2023. Report: [`Doc/ProjetRapport.pdf`](Doc/ProjetRapport.pdf).
 
-* [Doc/](./Algo_projet/Doc)
-  * [Ctron.png](./Algo_projet/Doc/Ctron.png)
-  * [Dependency graph.pdf](./Algo_projet/Doc/Dependency graph.pdf)
-  * [Dependency graph.png](./Algo_projet/Doc/Dependency graph.png)
-  * [enonce-2022-2023.pdf](./Algo_projet/Doc/enonce-2022-2023.pdf)
-  * [func.Md](./Algo_projet/Doc/func.Md)
-* [bin/](./Algo_projet/bin)
-  * [Client](./Algo_projet/bin/Client)
-  * [Server](./Algo_projet/bin/Server)
-* [src/](./Algo_projet/src)
-  * [header/](./Algo_projet/src/header)
-    * [common.h](./Algo_projet/src/header/common.h)
-    * [compute.h](./Algo_projet/src/header/compute.h)
-    * [con.h](./Algo_projet/src/header/con.h)
-    * [echange.h](./Algo_projet/src/header/echange.h)
-    * [gameplay.h](./Algo_projet/src/header/gameplay.h)
-    * [init.h](./Algo_projet/src/header/init.h)
-  * [Client.c](./Algo_projet/src/Client.c)
-  * [Server.c](./Algo_projet/src/Server.c)
-  * [compute.c](./Algo_projet/src/compute.c)
-  * [con.c](./Algo_projet/src/con.c)
-  * [echange.c](./Algo_projet/src/echange.c)
-  * [gameplay.c](./Algo_projet/src/gameplay.c)
-  * [init.c](./Algo_projet/src/init.c)
-  * [makefile](./Algo_projet/src/makefile)
-* [README.md](./Algo_projet/README.md)
-* [makefile](./Algo_projet/makefile)
+<p align="center"><img src="Doc/Ctron.png" alt="C-Tron gameplay" width="500"></p>
 
+## Architecture
 
-### Prerequisites
+- **Authoritative server** — accepts the players, advances the game at a configurable refresh rate, detects collisions, picks the winner and broadcasts the board state to all clients.
+- **Thin clients** — read keyboard input, send it to the server, and draw each board update received.
+- **Multiplexed I/O** — server and clients use `select()` to handle sockets and input without threads.
+- **Two play modes** — one player per terminal (two clients), or two players sharing one terminal and one client.
 
-The things you need before installing the software.
+| Module | Responsibility |
+|---|---|
+| `con.c` | Socket setup and connection handling (server and client) |
+| `echange.c` | Send / receive helpers for game messages |
+| `init.c` | Board initialisation, player positions, `fd_set` management |
+| `compute.c` | Movement, light trails, collision detection, winner check (server side) |
+| `gameplay.c` | Input handling and board rendering (client side) |
+| `Server.c`, `Client.c` | Entry points |
 
-* an up to date GCC or clang compiler 
+The module dependency graph and function list are in [`Doc/`](Doc/).
 
+## Build
 
-### Installation
+Requires gcc or clang and ncurses.
 
-
-
-```
-$ clone the repo 
-$ cd to the project root 
-$ run make and let the magic happen 
-$ make clean to clean the src dir 
-* make clean_all to celan bin and src dir
+```bash
+make            # builds bin/Server and bin/Client
+make clean_all  # removes debug symbols from bin/ and src/
 ```
 
-## Usage
+## Run
 
-A few examples of useful commands and/or tasks.
-
-```
-$ move usig IJKLM in 1 vs 1 and both IJKLM and ZQSD(SPACE) when two players are playing on the same terminal
-$ I or Z to move UP
-$ K or S to move DOWN
-$ J or Q to move LEFT
-$ L or D to move RIGHT
-$ M or SPACE to hide Light Trail
-$ when playing in a single terminal for two players press twice on the key to change 
-direction 
+```bash
+./bin/Server <port> <refresh_rate>
+./bin/Client <server_ip> <port> <players_on_this_terminal>   # 1 or 2
 ```
 
+Example, two players on two terminals:
 
-### Branches
+```bash
+./bin/Server 5000 10
+./bin/Client 127.0.0.1 5000 1     # terminal 1
+./bin/Client 127.0.0.1 5000 1     # terminal 2
+```
 
-* Main:
-* Feature:
-* develop:
-* release:
+## Controls
 
+| Action | Player 1 | Player 2 (shared terminal) |
+|---|---|---|
+| Up | `I` | `Z` |
+| Down | `K` | `S` |
+| Left | `J` | `Q` |
+| Right | `L` | `D` |
+| Hide light trail | `M` | `Space` |
 
+## Author
 
+**Ahmed Taleb Bechir**
+[atbechir.com](https://atbechir.com) · [LinkedIn](https://www.linkedin.com/in/ahmed-taleb-bechir-97a7301a4) · [GitHub](https://github.com/talebbechir123)
